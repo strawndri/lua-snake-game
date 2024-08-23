@@ -6,6 +6,8 @@ function love.load()
     _G.gridX = 30
     _G.gridY = 25
 
+    _G.gameState = 'start'
+
     _G.colorPalette = {
         {1, 0.333, 0.333}, -- vermelho
         {1, 0.722, 0.424}, -- laranja
@@ -16,8 +18,6 @@ function love.load()
         {1, 0.475, 0.776}, -- rosa
     }    
 
-    _G.gameState = 'start'
-    
     _G.images = {
         love.graphics.newImage('images/start.png'),
         love.graphics.newImage('images/gameOver.png'),
@@ -83,33 +83,34 @@ function love.update(dt)
                 if #directionQueue > 1 then
                     table.remove(directionQueue, 1)
                 end
+
+                local directions = {
+                    right = {x = 1, y = 0},
+                    left = {x = -1, y = 0},
+                    up = {x = 0, y = -1},
+                    down = {x = 0, y = 1}
+                }
                 
                 local nextPositionX = snake[1].x
                 local nextPositionY = snake[1].y
+
+                nextPositionX = nextPositionX + directions[directionQueue[1]].x
+                nextPositionY = nextPositionY + directions[directionQueue[1]].y
     
-                if directionQueue[1] == 'right' then
-                    nextPositionX = nextPositionX + 1
-                    if nextPositionX > gridX then
-                        nextPositionX = 1
-                    end
+                if nextPositionX > gridX then
+                    nextPositionX = 1
+                end
     
-                elseif directionQueue[1] == 'left' then
-                    nextPositionX = nextPositionX - 1
-                    if nextPositionX < 1 then
-                        nextPositionX = gridX
-                    end
+                if nextPositionX < 1 then
+                    nextPositionX = gridX
+                end
     
-                elseif directionQueue[1] == 'up' then
-                    nextPositionY = nextPositionY - 1
-                    if nextPositionY < 1 then
-                        nextPositionY = gridY
-                    end
+                if nextPositionY < 1 then
+                    nextPositionY = gridY
+                end
     
-                elseif directionQueue[1] == 'down' then
-                    nextPositionY = nextPositionY + 1
-                    if nextPositionY > gridY then
-                        nextPositionY = 1
-                    end
+                if nextPositionY > gridY then
+                    nextPositionY = 1
                 end
     
                 local canMove = true
