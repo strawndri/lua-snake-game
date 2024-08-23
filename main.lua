@@ -6,6 +6,18 @@ function love.load()
     _G.gridX = 30
     _G.gridY = 25
 
+    _G.colorPalette = {
+        {1, 0.333, 0.333}, -- vermelho
+        {1, 0.722, 0.424}, -- laranja
+        {0.945, 0.98, 0.549}, -- amarelo
+        {0.314, 0.98, 0.482}, -- verde
+        {0.545, 0.914, 0.992}, -- azul
+        {0.741, 0.576, 0.976}, -- roxo
+        {1, 0.475, 0.776}, -- rosa
+    }
+
+    _G.currentColorIndex = 4
+
     function moveFood()
 
         local possibleFoodPositions = {}
@@ -29,13 +41,21 @@ function love.load()
         food = possibleFoodPositions[
             love.math.random(#possibleFoodPositions)
         ]
+
+        food.color = colorPalette[currentColorIndex]
+
+        currentColorIndex = currentColorIndex + 1
+        if currentColorIndex > #colorPalette then
+            currentColorIndex = 1
+        end
+
     end
 
     function reset()
         _G.snake  = {
-            {x = 3, y = 1},
-            {x = 2, y = 1},
-            {x = 1, y = 1},
+            {x = 3, y = 1, color = colorPalette[1]},
+            {x = 2, y = 1, color = colorPalette[1]},
+            {x = 1, y = 1, color = colorPalette[1]},
         }
         _G.directionQueue = {'right'}
         _G.timer = 0
@@ -94,15 +114,20 @@ function love.update(dt)
                     canMove = false
                 end
             end
+
             
             if canMove then
+                local newColor = snake[1].color
+
                 table.insert(snake, 1, {
                     x = nextPositionX,
-                    y = nextPositionY
+                    y = nextPositionY,
+                    color = snake[1].color
                 })
                 
                 if snake[1].x == food.x
                 and snake[1].y == food.y then
+                    snake[1].color = food.color
                     moveFood()
                 else
                     table.remove(snake)
@@ -156,7 +181,7 @@ function love.draw()
     
     for segmentIndex, segment in ipairs(snake) do
         if snakeAlive then
-            love.graphics.setColor(1, 0.475, 0.776)
+            love.graphics.setColor(segment.color)
         else
             love.graphics.setColor(0.518, 0.537, 0.671)
         end
@@ -164,6 +189,6 @@ function love.draw()
         drawCell(segment.x, segment.y)
     end
 
-    love.graphics.setColor(0.314, 0.98, 0.482)
+    love.graphics.setColor(food.color)
     drawCell(food.x, food.y)
 end
