@@ -198,20 +198,24 @@ function love.draw()
         )
     end
 
-    if gameState == 'start' then
+    local function writeText(text, image, addHeight)
         love.graphics.setColor(1, 1, 1)
         love.graphics.printf(
-            'Aperte ENTER para iniciar', 
+            text, 
             0, 
-            love.graphics.getHeight() / 2 + 80, 
+            love.graphics.getHeight() / 2 + addHeight, 
             love.graphics.getWidth(), 
             "center"
         )
         love.graphics.draw(
-            images[1], 
-            (love.graphics.getWidth() - images[1]:getWidth()) / 2, 
-            (love.graphics.getHeight() - images[1]:getHeight() - 120) / 2
+            image, 
+            (love.graphics.getWidth() - image:getWidth()) / 2, 
+            (love.graphics.getHeight() - image:getHeight() - 120) / 2
         )
+    end
+
+    if gameState == 'start' then
+        writeText('Aperte ENTER para iniciar', images[1], 80)
     
     elseif gameState == 'playing' then
         for segmentIndex, segment in ipairs(snake) do
@@ -228,18 +232,6 @@ function love.draw()
         drawCell(food.x, food.y)
     
     elseif gameState == 'gameOver' then
-        love.graphics.setColor(1, 1, 1)
-        love.graphics.printf(
-            'GAME OVER! Aperte ENTER para reiniciar', 
-            0, 
-            love.graphics.getHeight() / 2, 
-            love.graphics.getWidth(), 
-            "center"
-        )
-        love.graphics.draw(
-            images[2], 
-            (love.graphics.getWidth() - images[2]:getWidth()) / 2, 
-            (love.graphics.getHeight() - images[2]:getHeight() - 120) / 2
-        )
+        writeText('GAME OVER! Aperte ENTER para reiniciar', images[2], 0)
     end
 end
