@@ -14,9 +14,14 @@ function love.load()
         {0.545, 0.914, 0.992}, -- azul
         {0.741, 0.576, 0.976}, -- roxo
         {1, 0.475, 0.776}, -- rosa
-    }
+    }    
 
-    _G.currentColorIndex = 4
+    _G.gameState = 'start'
+    
+    _G.images = {
+        love.graphics.newImage('images/start.png'),
+        love.graphics.newImage('images/gameOver.png'),
+    }
 
     function moveFood()
 
@@ -53,6 +58,7 @@ function love.load()
 
     function reset()
         _G.snake  = {
+            {x = 4, y = 1, color = colorPalette[1]},
             {x = 3, y = 1, color = colorPalette[1]},
             {x = 2, y = 1, color = colorPalette[1]},
             {x = 1, y = 1, color = colorPalette[1]},
@@ -60,6 +66,7 @@ function love.load()
         _G.directionQueue = {'right'}
         _G.timer = 0
         _G.snakeAlive = true
+        _G.currentColorIndex = 4
         moveFood()
     end
     
@@ -69,80 +76,92 @@ end
 function love.update(dt)
     timer = timer + dt
     
-    if snakeAlive then
-        if timer >= 0.15 then
-            timer = 0
-            
-            if #directionQueue > 1 then
-                table.remove(directionQueue, 1)
-            end
-            
-            local nextPositionX = snake[1].x
-            local nextPositionY = snake[1].y
-
-            if directionQueue[1] == 'right' then
-                nextPositionX = nextPositionX + 1
-                if nextPositionX > gridX then
-                    nextPositionX = 1
-                end
-
-            elseif directionQueue[1] == 'left' then
-                nextPositionX = nextPositionX - 1
-                if nextPositionX < 1 then
-                    nextPositionX = gridX
-                end
-
-            elseif directionQueue[1] == 'up' then
-                nextPositionY = nextPositionY - 1
-                if nextPositionY < 1 then
-                    nextPositionY = gridY
-                end
-
-            elseif directionQueue[1] == 'down' then
-                nextPositionY = nextPositionY + 1
-                if nextPositionY > gridY then
-                    nextPositionY = 1
-                end
-            end
-
-            local canMove = true
-
-            for segmentIndex, segment in ipairs(snake) do
-                if segmentIndex ~= #snake
-                and nextPositionX == segment.x
-                and nextPositionY == segment.y then
-                    canMove = false
-                end
-            end
-
-            
-            if canMove then
-                local newColor = snake[1].color
-
-                table.insert(snake, 1, {
-                    x = nextPositionX,
-                    y = nextPositionY,
-                    color = snake[1].color
-                })
+    if gameState == 'playing' then
+        if snakeAlive then
+            if timer >= 0.15 then
+                timer = 0
                 
-                if snake[1].x == food.x
-                and snake[1].y == food.y then
-                    snake[1].color = food.color
-                    moveFood()
-                else
-                    table.remove(snake)
+                if #directionQueue > 1 then
+                    table.remove(directionQueue, 1)
                 end
-            else 
-                snakeAlive = false
+                
+                local nextPositionX = snake[1].x
+                local nextPositionY = snake[1].y
+    
+                if directionQueue[1] == 'right' then
+                    nextPositionX = nextPositionX + 1
+                    if nextPositionX > gridX then
+                        nextPositionX = 1
+                    end
+    
+                elseif directionQueue[1] == 'left' then
+                    nextPositionX = nextPositionX - 1
+                    if nextPositionX < 1 then
+                        nextPositionX = gridX
+                    end
+    
+                elseif directionQueue[1] == 'up' then
+                    nextPositionY = nextPositionY - 1
+                    if nextPositionY < 1 then
+                        nextPositionY = gridY
+                    end
+    
+                elseif directionQueue[1] == 'down' then
+                    nextPositionY = nextPositionY + 1
+                    if nextPositionY > gridY then
+                        nextPositionY = 1
+                    end
+                end
+    
+                local canMove = true
+    
+                for segmentIndex, segment in ipairs(snake) do
+                    if segmentIndex ~= #snake
+                    and nextPositionX == segment.x
+                    and nextPositionY == segment.y then
+                        canMove = false
+                        snakeAlive = false
+                    end
+                end
+    
+                
+                if canMove then
+                    local newColor = snake[1].color
+    
+                    table.insert(snake, 1, {
+                        x = nextPositionX,
+                        y = nextPositionY,
+                        color = snake[1].color
+                    })
+                    
+                    if snake[1].x == food.x
+                    and snake[1].y == food.y then
+                        snake[1].color = food.color
+                        moveFood()
+                    else
+                        table.remove(snake)
+                    end
+                else 
+                    snakeAlive = false
+                end
             end
+        elseif timer >= 2 then
+            reset()
+            gameState = 'gameOver'
         end
-    elseif timer >= 2 then
-        reset()
     end
 end
 
 function love.keypressed(key)
-    if key == 'right' 
+
+    if key == 'return' and gameState == 'start' then
+        gameState = 'playing'
+
+    elseif key == 'return' and gameState == 'gameOver' then
+        reset()
+        gameState = 'playing'
+
+    elseif key == 'right' 
     and directionQueue[#directionQueue] ~= 'right'
     and directionQueue[#directionQueue] ~= 'left' then
         table.insert(directionQueue, 'right')
@@ -178,17 +197,49 @@ function love.draw()
             cellSize - 1
         )
     end
+
+    if gameState == 'start' then
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.printf(
+            'Aperte ENTER para iniciar', 
+            0, 
+            love.graphics.getHeight() / 2 + 80, 
+            love.graphics.getWidth(), 
+            "center"
+        )
+        love.graphics.draw(
+            images[1], 
+            (love.graphics.getWidth() - images[1]:getWidth()) / 2, 
+            (love.graphics.getHeight() - images[1]:getHeight() - 120) / 2
+        )
     
-    for segmentIndex, segment in ipairs(snake) do
-        if snakeAlive then
-            love.graphics.setColor(segment.color)
-        else
-            love.graphics.setColor(0.518, 0.537, 0.671)
+    elseif gameState == 'playing' then
+        for segmentIndex, segment in ipairs(snake) do
+            if snakeAlive then
+                love.graphics.setColor(segment.color)
+            else
+                love.graphics.setColor(0.518, 0.537, 0.671)
+            end
+
+            drawCell(segment.x, segment.y)
         end
-
-        drawCell(segment.x, segment.y)
+        
+        love.graphics.setColor(food.color)
+        drawCell(food.x, food.y)
+    
+    elseif gameState == 'gameOver' then
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.printf(
+            'GAME OVER! Aperte ENTER para reiniciar', 
+            0, 
+            love.graphics.getHeight() / 2, 
+            love.graphics.getWidth(), 
+            "center"
+        )
+        love.graphics.draw(
+            images[2], 
+            (love.graphics.getWidth() - images[2]:getWidth()) / 2, 
+            (love.graphics.getHeight() - images[2]:getHeight() - 120) / 2
+        )
     end
-
-    love.graphics.setColor(food.color)
-    drawCell(food.x, food.y)
 end
