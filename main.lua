@@ -58,7 +58,6 @@ function love.load()
 
     function reset()
         _G.snake  = {
-            {x = 4, y = 1, color = colorPalette[1]},
             {x = 3, y = 1, color = colorPalette[1]},
             {x = 2, y = 1, color = colorPalette[1]},
             {x = 1, y = 1, color = colorPalette[1]},
@@ -152,34 +151,29 @@ function love.update(dt)
     end
 end
 
+function queueDirection(newDirection, oppositeDirection)
+    if directionQueue[#directionQueue] ~= newDirection
+    and directionQueue[#directionQueue] ~= oppositeDirection then 
+        table.insert(directionQueue, newDirection)
+    end
+end
+
 function love.keypressed(key)
 
     if key == 'return' and gameState == 'start' then
         gameState = 'playing'
-
     elseif key == 'return' and gameState == 'gameOver' then
         reset()
         gameState = 'playing'
-
-    elseif key == 'right' 
-    and directionQueue[#directionQueue] ~= 'right'
-    and directionQueue[#directionQueue] ~= 'left' then
-        table.insert(directionQueue, 'right')
+    elseif key == 'right' then
+        queueDirection('right', 'left')
         
-    elseif key == 'left' 
-    and directionQueue[#directionQueue]  ~= 'left'
-    and directionQueue[#directionQueue]  ~= 'right' then
-        table.insert(directionQueue, 'left')
-        
-    elseif key == 'up' 
-    and directionQueue[#directionQueue]  ~= 'up'
-    and directionQueue[#directionQueue]  ~= 'down' then
-        table.insert(directionQueue, 'up')
-        
-    elseif key == 'down' 
-    and directionQueue[#directionQueue]  ~= 'down'
-    and directionQueue[#directionQueue]  ~= 'up' then
-        table.insert(directionQueue, 'down')
+    elseif key == 'left' then
+        queueDirection('left', 'right')
+    elseif key == 'up' then
+        queueDirection('up', 'down')
+    elseif key == 'down' then
+        queueDirection('down', 'up')
     end
 end
 
