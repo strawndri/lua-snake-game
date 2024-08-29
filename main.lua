@@ -6,6 +6,7 @@ function love.load()
     _G.gridX = 30
     _G.gridY = 25
 
+    -- estado inicial do jogo
     _G.gameState = 'start'
 
     _G.colorPalette = {
@@ -23,32 +24,38 @@ function love.load()
         love.graphics.newImage('images/gameOver.png'),
     }
 
+    -- função para mover a comida para uma nova posição aleatória
     function moveFood()
-
         local possibleFoodPositions = {}
 
+        -- verifica todas as posições possíveis
         for foodX = 1, gridX do
             for foodY = 1, gridY do
                 local possible = true
 
+                -- impede que a comida apareça onde a cobra está
                 for segmentIndex, segment in ipairs(snake) do 
                     if foodX == segment.x and foodY == segment.y then
                         possible = false
                     end
                 end
-            
+
+                -- adiciona as posições possíveis para a comida na lista
                 if possible then
                     table.insert(possibleFoodPositions, {x = foodX, y = foodY})
                 end
             end
         end
 
+        -- seleciona aleatoriamente uma nova posição pra comida
         food = possibleFoodPositions[
             love.math.random(#possibleFoodPositions)
         ]
 
+        -- altera a cor da comida atual
         food.color = colorPalette[currentColorIndex]
 
+        -- avança para a próxima cor da paleta
         currentColorIndex = currentColorIndex + 1
         if currentColorIndex > #colorPalette then
             currentColorIndex = 1
@@ -56,6 +63,7 @@ function love.load()
 
     end
 
+    -- função para redefinir o jogo
     function reset()
         _G.snake  = {
             {x = 3, y = 1, color = colorPalette[1]},
@@ -77,13 +85,17 @@ function love.update(dt)
     
     if gameState == 'playing' then
         if snakeAlive then
+
+            -- verifica se o temporizador atingiu o intervalo de movimento
             if timer >= 0.15 then
                 timer = 0
                 
+                -- remove direções antigas da fila de direção
                 if #directionQueue > 1 then
                     table.remove(directionQueue, 1)
                 end
 
+                -- define as direções de movimento da cobra
                 local directions = {
                     right = {x = 1, y = 0},
                     left = {x = -1, y = 0},
@@ -91,12 +103,14 @@ function love.update(dt)
                     down = {x = 0, y = 1}
                 }
                 
+                -- nova posição da cobra
                 local nextPositionX = snake[1].x
                 local nextPositionY = snake[1].y
 
                 nextPositionX = nextPositionX + directions[directionQueue[1]].x
                 nextPositionY = nextPositionY + directions[directionQueue[1]].y
-    
+                
+                -- implementa a movimentação da cobra através da borda da tela
                 if nextPositionX > gridX then
                     nextPositionX = 1
                 end
@@ -114,7 +128,8 @@ function love.update(dt)
                 end
     
                 local canMove = true
-    
+                
+                -- verifica se houve colisão da cobra com ela mesma
                 for segmentIndex, segment in ipairs(snake) do
                     if segmentIndex ~= #snake
                     and nextPositionX == segment.x
@@ -124,7 +139,7 @@ function love.update(dt)
                     end
                 end
     
-                
+                -- move a cobra para anova posição ou termina o jogo (em caso de colisão)
                 if canMove then
                     local newColor = snake[1].color
     
@@ -134,6 +149,7 @@ function love.update(dt)
                         color = snake[1].color
                     })
                     
+                    -- verifica se a cobra comeu a comida
                     if snake[1].x == food.x
                     and snake[1].y == food.y then
                         snake[1].color = food.color
@@ -152,6 +168,7 @@ function love.update(dt)
     end
 end
 
+-- função para adicionar uma nova direção à fila de direção da cobra
 function queueDirection(newDirection, oppositeDirection)
     if directionQueue[#directionQueue] ~= newDirection
     and directionQueue[#directionQueue] ~= oppositeDirection then 
@@ -159,6 +176,7 @@ function queueDirection(newDirection, oppositeDirection)
     end
 end
 
+-- função chamada quando uma tecla do teclado é pressionada 
 function love.keypressed(key)
 
     if key == 'return' and gameState == 'start' then
@@ -182,6 +200,7 @@ function love.draw()
     
     local cellSize = 20
 
+    -- função que desenha uma célula na grade
     local function drawCell(x, y)
         love.graphics.rectangle(
             'fill',
@@ -193,6 +212,7 @@ function love.draw()
         )
     end
 
+    -- função que escreve um texto na tela com uma imagem associada
     local function writeText(text, image, addHeight)
         love.graphics.setColor(1, 1, 1)
         love.graphics.printf(
@@ -209,9 +229,11 @@ function love.draw()
         )
     end
 
+    -- desenha a tela inicial
     if gameState == 'start' then
         writeText('Aperte ENTER para iniciar', images[1], 80)
     
+    -- desenha o estado atual do jogo
     elseif gameState == 'playing' then
         for segmentIndex, segment in ipairs(snake) do
             if snakeAlive then
@@ -226,7 +248,8 @@ function love.draw()
         love.graphics.setColor(food.color)
         drawCell(food.x, food.y)
     
+    -- desenha a tela de game over
     elseif gameState == 'gameOver' then
-        writeText('GAME OVER! Aperte ENTER para reiniciar', images[2], 0)
+        writeText('Aperte ENTER para reiniciar', images[2], 0)
     end
 end
